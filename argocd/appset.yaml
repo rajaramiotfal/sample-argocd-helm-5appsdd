@@ -58,7 +58,7 @@ spec:
     spec:
       project: '{{project}}'
       source:
-        repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5apps.git
+        repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
         path: '{{chartPath}}'
         helm:
