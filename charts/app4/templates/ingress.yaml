@@ -1,0 +1,25 @@
+{- $v := include "app.values" . | fromYaml }
+{- if $v.ingress.enabled }
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: { include "app4.fullname" . }
+  annotations: {- toYaml $v.ingress.annotations | nindent 4 }
+spec:
+  ingressClassName: { $v.ingress.className | default "nginx" }
+  rules:
+  {- range $v.ingress.hosts }
+    - host: { .host }
+      http:
+        paths:
+        {- range .paths }
+          - path: { .path }
+            pathType: { .pathType }
+            backend:
+              service:
+                name: { include "app4.fullname" $ }
+                port:
+                  number: { $v.service.port | default 80 }
+        {- end }
+  {- end }
+{- end }
