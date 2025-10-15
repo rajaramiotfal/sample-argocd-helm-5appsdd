@@ -1,24 +1,31 @@
-{- define "app4.name" -}app4{- end -}
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "app4.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
-{- define "app4.fullname" -}{ .Release.Name }{- end -}
+{{/*
+Create a fully qualified app name (release + chart name)
+*/}}
+{{- define "app4.fullname" -}}
+{{- printf "%s-%s" .Release.Name (include "app4.name" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
-{- define "app4.labels" -}
-app.kubernetes.io/name: { include "app4.name" . | quote }
-helm.sh/chart: { printf "%s-%s" .Chart.Name (.Chart.Version | replace "+" "_") | quote }
-app.kubernetes.io/instance: { .Release.Name | quote }
-app.kubernetes.io/version: { .Chart.AppVersion | quote }
-app.kubernetes.io/managed-by: { .Release.Service | quote }
-{- end -}
+{{/*
+Common labels
+*/}}
+{{- define "app4.labels" -}}
+app.kubernetes.io/name: {{ include "app4.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
 
-{- define "app4.selectorLabels" -}
-app.kubernetes.io/name: { include "app4.name" . | quote }
-app.kubernetes.io/instance: { .Release.Name | quote }
-{- end -}
-
-{/* Return merged values: base .Values overlaid by env apps.<chartName> block */}
-{- define "app.values" -}
-{- $app := .Chart.Name -}
-{- $env := get .Values.apps $app | default dict -}
-{- $base := deepCopy .Values -}
-{- mustMerge $base $env -}
-{- end -}
+{{/*
+Selector labels
+*/}}
+{{- define "app4.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "app4.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
