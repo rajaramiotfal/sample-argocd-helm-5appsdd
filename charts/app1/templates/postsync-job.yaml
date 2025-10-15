@@ -2,12 +2,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next
+  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next-{{ randAlphaNum 4 | lower }}
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
 spec:
   backoffLimit: 1
   template:
@@ -15,7 +15,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: quay.io/argoproj/argocd:v2.9.3    # ✅ Known working image with CLI
+          image: quay.io/argoproj/argocd-cli:v2.7.4   # ✅ CLI image with argocd binary
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -38,25 +38,20 @@ spec:
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
               echo "🔹 Syncing next environment application: ${NEXT_APP}"
 
-              # Hardcoded admin password for testing only
-              ARGOCD_ADMIN_PWD="SwlWTFxpGRmUPBN1"
+              # ✅ Step 1: Login first
+              ARGOCD_ADMIN_PWD="SwlWTFxpGRmUPBN1"   # <-- Hardcoded for testing
+              argocd login 127.0.0.1:8085 \
+                --username admin \
+                --password "${ARGOCD_ADMIN_PWD}" \
+                --grpc-web --insecure
 
+              # ✅ Step 2: Sync the next environment
               argocd app sync ${NEXT_APP} \
-                --server 127.0.0.1:8085 \
-                --username admin \
-                --password "${ARGOCD_ADMIN_PWD}" \
-                --grpc-web || { echo "❌ Sync failed"; exit 1; }
+                --grpc-web --insecure
 
-              echo "✅ Sync command completed successfully for ${NEXT_APP}"
-
-              # Optional: Wait until next app becomes healthy
+              # ✅ Step 3: Wait until it's healthy
               argocd app wait ${NEXT_APP} \
-                --server 127.0.0.1:8085 \
-                --username admin \
-                --password "${ARGOCD_ADMIN_PWD}" \
-                --grpc-web --health --timeout 300 || {
-                echo "⚠️ ${NEXT_APP} did not reach healthy state in time"; exit 1; }
+                --health --timeout 300 --grpc-web --insecure
 
               echo "✅ ${NEXT_APP} promotion completed successfully!"
-              exit 0
 {{- end }}
