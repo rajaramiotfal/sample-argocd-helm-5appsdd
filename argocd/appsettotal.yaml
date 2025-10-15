@@ -12,15 +12,15 @@ spec:
           - env: dev
             clusterName: dev-cluster
             project: dev
-            nsPattern: dev-{{name}}
+            nsPattern: dev-ns
           - env: qa
             clusterName: dev-cluster
             project: qa
-            nsPattern: qa-{{name}}
+            nsPattern: qa-ns
           - env: prod
             clusterName: dev-cluster
             project: prod
-            nsPattern: prod-{{name}}
+            nsPattern: prod-ns
       - list:
           elements:
           - name: app1
