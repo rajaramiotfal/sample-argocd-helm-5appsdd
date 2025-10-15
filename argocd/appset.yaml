@@ -58,7 +58,7 @@ spec:
           - envs/{{env}}/default.values.yaml
           - envs/{{env}}/app.values.yaml
       destination:
-        name: https://kubernetes.default.svc
+        server: https://kubernetes.default.svc
         namespace: 'dev-{{name}}'
       syncPolicy:
         automated:
