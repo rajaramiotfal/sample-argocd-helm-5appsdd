@@ -15,7 +15,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: quay.io/argoproj/argocd-cli:v2.7.4   # ✅ CLI image with argocd binary
+          image: quay.io/argoproj/argocd-cli:v2.9.3   # ✅ CLI image with argocd binary
           command: ["/bin/sh", "-c"]
           args:
             - |
