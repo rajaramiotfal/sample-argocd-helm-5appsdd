@@ -26,3 +26,6 @@ resources: {}
 
 # Optional block used by env files to override per app:
 apps: {}
+# values.yaml
+nameOverride: ""
+fullnameOverride: ""

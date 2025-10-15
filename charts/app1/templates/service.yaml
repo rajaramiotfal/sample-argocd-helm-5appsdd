@@ -1,14 +1,15 @@
-{- $v := include "app.values" . | fromYaml }
 apiVersion: v1
 kind: Service
 metadata:
-  name: { include "app1.fullname" . }
-  labels: {- include "app1.labels" . | nindent 4 }
+  name: {{ include "app1.fullname" . }}
+  labels:
+    {{- include "app1.labels" . | nindent 4 }}
 spec:
-  type: { $v.service.type | default "ClusterIP" }
-  selector: {- include "app1.selectorLabels" . | nindent 4 }
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    {{- include "app1.selectorLabels" . | nindent 4 }}
   ports:
-    - name: http
-      port: { $v.service.port | default 80 }
-      targetPort: { $v.containerPort | default 8080 }
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.containerPort }}
       protocol: TCP
+      name: http
