@@ -3,11 +3,12 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
+  annotations:
+    # Tell Argo CD this is a PostSync hook
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   template:
     spec:
@@ -33,14 +34,13 @@ spec:
               esac
 
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
-              echo "Syncing next application: ${NEXT_APP}"
+              echo "Syncing Argo CD application: ${NEXT_APP}"
 
               argocd app sync ${NEXT_APP} \
                 --server argocd-server.argocd.svc.cluster.local \
                 --username admin \
                 --password "$ARGOCD_ADMIN_PWD" \
                 --grpc-web
-
           env:
             - name: ARGOCD_ADMIN_PWD
               valueFrom:
