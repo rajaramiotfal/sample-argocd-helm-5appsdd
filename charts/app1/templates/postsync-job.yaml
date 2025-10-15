@@ -39,12 +39,7 @@ spec:
               argocd app sync ${NEXT_APP} \
                 --server argocd-server.argocd.svc.cluster.local \
                 --username admin \
-                --password "$ARGOCD_ADMIN_PWD" \
+                --password "SwlWTFxpGRmUPBN1" \
                 --grpc-web
-          env:
-            - name: ARGOCD_ADMIN_PWD
-              valueFrom:
-                secretKeyRef:
-                  name: argocd-initial-admin-secret
-                  key: password
+                          
 {{- end }}
