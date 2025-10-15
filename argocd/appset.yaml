@@ -11,7 +11,7 @@ spec:
           elements:
           - env: dev
             clusterName: dev-cluster
-            project: dev
+            project: default
             nsPattern: dev-{{name}}          
       - list:
           elements:
@@ -48,7 +48,7 @@ spec:
         argocd-image-updater.argoproj.io/git-branch: main
         argocd-image-updater.argoproj.io/write-back-target: helmvalues:/envs/{{env}}/app.values.yaml
     spec:
-      project: '{{project}}'
+      project: default
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
@@ -58,8 +58,8 @@ spec:
           - envs/{{env}}/default.values.yaml
           - envs/{{env}}/app.values.yaml
       destination:
-        name: '{{clusterName}}'
-        namespace: '{{nsPattern}}'
+        name: https://kubernetes.default.svc
+        namespace: 'dev-{{name}}'
       syncPolicy:
         automated:
           prune: true
