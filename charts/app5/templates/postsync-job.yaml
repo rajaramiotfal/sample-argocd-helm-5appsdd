@@ -1,4 +1,3 @@
-{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -6,7 +5,6 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
-    # Tell Argo CD this is a PostSync hook
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
@@ -15,36 +13,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: argoproj/argocd:v2.10.0
+          image: quay.io/argoproj/argocd:v2.11.0
           command: ["/bin/sh", "-c"]
           args:
-            - |
-              echo "Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
-              case "{{ .Values.env }}" in
-                dev)
-                  NEXT_ENV="qa"
-                  ;;
-                qa)
-                  NEXT_ENV="prod"
-                  ;;
-                *)
-                  echo "No promotion needed for {{ .Values.env }}"
-                  exit 0
-                  ;;
-              esac
-
-              NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
-              echo "Syncing Argo CD application: ${NEXT_APP}"
-
-              argocd app sync ${NEXT_APP} \
-                --server argocd-server.argocd.svc.cluster.local \
-                --username admin \
-                --password "$ARGOCD_ADMIN_PWD" \
-                --grpc-web
-          env:
-            - name: ARGOCD_ADMIN_PWD
-              valueFrom:
-                secretKeyRef:
-                  name: argocd-initial-admin-secret
-                  key: password
-{{- end }}
+            - echo "Promotion triggered for {{ .Chart.Name }} in {{ .Values.env }}"

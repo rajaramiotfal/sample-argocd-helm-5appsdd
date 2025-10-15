@@ -13,7 +13,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: argoproj/argocd:v2.10.0
+          image: quay.io/argoproj/argocd:v2.11.0
           command: ["/bin/sh", "-c"]
           args:
             - echo "Promotion triggered for {{ .Chart.Name }} in {{ .Values.env }}"

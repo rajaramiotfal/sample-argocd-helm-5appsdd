@@ -30,3 +30,5 @@ apps: {}
 # values.yaml
 nameOverride: ""
 fullnameOverride: ""
+
+env: dev
