@@ -70,6 +70,9 @@ spec:
           valueFiles:
           - '../../envs/{{env}}/default.values.yaml'
           - '../../envs/{{env}}/app.values.yaml'
+          parameters:
+            - name: env
+              value: '{{env}}'
       destination:
         server: https://kubernetes.docker.internal:6443
         namespace: '{{nsPattern}}'

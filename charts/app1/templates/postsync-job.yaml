@@ -1,0 +1,67 @@
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+  annotations:
+    # ArgoCD hook metadata
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: promote
+          image: quay.io/argoproj/argocd-cli:v2.11.0   # ✅ official CLI image
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
+
+              case "{{ .Values.env }}" in
+                dev)
+                  NEXT_ENV="qa"
+                  ;;
+                qa)
+                  NEXT_ENV="prod"
+                  ;;
+                *)
+                  echo "No promotion required for {{ .Values.env }}"
+                  exit 0
+                  ;;
+              esac
+
+              NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
+              echo "🔹 Syncing next environment application: ${NEXT_APP}"
+
+              # Perform sync and wait for completion
+              argocd app sync ${NEXT_APP} \
+                --server argocd-server.argocd.svc.cluster.local \
+                --username admin \
+                --password "$ARGOCD_ADMIN_PWD" \
+                --grpc-web || { echo "❌ Sync failed"; exit 1; }
+
+              echo "✅ Sync command completed successfully for ${NEXT_APP}"
+
+              # Wait until Healthy (optional but safer)
+              argocd app wait ${NEXT_APP} \
+                --server argocd-server.argocd.svc.cluster.local \
+                --username admin \
+                --password "$ARGOCD_ADMIN_PWD" \
+                --grpc-web --health --timeout 300 || {
+                echo "⚠️ ${NEXT_APP} did not reach healthy state in time"; exit 1; }
+
+              echo "✅ ${NEXT_APP} promotion completed successfully!"
+              exit 0
+          env:
+            - name: ARGOCD_ADMIN_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-initial-admin-secret
+                  key: password
+{{- end }}
