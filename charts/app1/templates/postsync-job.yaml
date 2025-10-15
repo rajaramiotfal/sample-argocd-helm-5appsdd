@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: promote-{{ .Chart.Name }}-{{ .values.env }}-to-next
+  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
@@ -16,4 +16,4 @@ spec:
           image: argoproj/argocd:v2.10.0
           command: ["/bin/sh", "-c"]
           args:
-            - echo "Promotion triggered for {{ .Chart.Name }} in {{ .values.env }}"
+            - echo "Promotion triggered for {{ .Chart.Name }} in {{ .Values.env }}"
