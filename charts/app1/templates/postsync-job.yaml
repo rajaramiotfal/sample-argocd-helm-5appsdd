@@ -6,20 +6,22 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
-    # Tell Argo CD this is a PostSync hook
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
+  backoffLimit: 1
   template:
     spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: quay.io/argoproj/argocd:v2.9.3
+          image: quay.io/argoproj/argocd:v2.9.3    # ✅ Known working image with CLI
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
+              set -e
+              echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
+
               case "{{ .Values.env }}" in
                 dev)
                   NEXT_ENV="qa"
@@ -28,18 +30,33 @@ spec:
                   NEXT_ENV="prod"
                   ;;
                 *)
-                  echo "No promotion needed for {{ .Values.env }}"
+                  echo "No promotion required for {{ .Values.env }}"
                   exit 0
                   ;;
               esac
 
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
-              echo "Syncing Argo CD application: ${NEXT_APP}"
+              echo "🔹 Syncing next environment application: ${NEXT_APP}"
+
+              # Hardcoded admin password for testing only
+              ARGOCD_ADMIN_PWD="SwlWTFxpGRmUPBN1"
 
               argocd app sync ${NEXT_APP} \
                 --server argocd-server.argocd.svc.cluster.local \
                 --username admin \
-                --password "SwlWTFxpGRmUPBN1" \
-                --grpc-web
-                          
+                --password "${ARGOCD_ADMIN_PWD}" \
+                --grpc-web || { echo "❌ Sync failed"; exit 1; }
+
+              echo "✅ Sync command completed successfully for ${NEXT_APP}"
+
+              # Optional: Wait until next app becomes healthy
+              argocd app wait ${NEXT_APP} \
+                --server argocd-server.argocd.svc.cluster.local \
+                --username admin \
+                --password "${ARGOCD_ADMIN_PWD}" \
+                --grpc-web --health --timeout 300 || {
+                echo "⚠️ ${NEXT_APP} did not reach healthy state in time"; exit 1; }
+
+              echo "✅ ${NEXT_APP} promotion completed successfully!"
+              exit 0
 {{- end }}
