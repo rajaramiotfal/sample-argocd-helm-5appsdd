@@ -31,4 +31,3 @@ apps: {}
 nameOverride: ""
 fullnameOverride: ""
 
-env: dev
