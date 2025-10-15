@@ -1,49 +1,48 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-matrix-with-hooks
+  name: apps-matrix-second
   namespace: argocd
 spec:
   generators:
-    - matrix:
-        generators:
-          - list:
-              elements:
-                - env: dev
-                  clusterName: dev-cluster
-                  project: dev
-                  nsPattern: dev-ns
-                - env: qa
-                  clusterName: dev-cluster
-                  project: qa
-                  nsPattern: qa-ns
-                - env: prod
-                  clusterName: dev-cluster
-                  project: prod
-                  nsPattern: prod-ns
-          - list:
-              elements:
-                - name: app1
-                  chartPath: charts/app1
-                  image: docker.io/rajarammurali513/app1
-                  semver: ~1
-                - name: app2
-                  chartPath: charts/app2
-                  image: docker.io/rajarammurali513/app2
-                  semver: ~1
-                - name: app3
-                  chartPath: charts/app3
-                  image: docker.io/rajarammurali513/app3
-                  semver: ~1
-                - name: app4
-                  chartPath: charts/app4
-                  image: docker.io/rajarammurali513/app4
-                  semver: ~1
-                - name: app5
-                  chartPath: charts/app5
-                  image: docker.io/rajarammurali513/app5
-                  semver: ~1
-
+  - matrix:
+      generators:
+      - list:
+          elements:
+          - env: dev
+            clusterName: dev-cluster
+            project: dev
+            nsPattern: dev-ns
+          - env: qa
+            clusterName: dev-cluster
+            project: qa
+            nsPattern: qa-ns
+          - env: prod
+            clusterName: dev-cluster
+            project: prod
+            nsPattern: prod-ns
+      - list:
+          elements:
+          - name: app1
+            chartPath: charts/app1
+            image: docker.io/rajarammurali513/app1
+            semver: ~1
+          - name: app2
+            chartPath: charts/app2
+            image: docker.io/rajarammurali513/app2
+            semver: ~1
+          - name: app3
+            chartPath: charts/app3
+            image: docker.io/rajarammurali513/app3
+            semver: ~1
+          - name: app4
+            chartPath: charts/app4
+            image: docker.io/rajarammurali513/app4
+            semver: ~1
+          - name: app5
+            chartPath: charts/app5
+            image: docker.io/rajarammurali513/app5
+            semver: ~1
   template:
     metadata:
       name: '{{name}}-{{env}}'
@@ -52,6 +51,7 @@ spec:
         argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: apps.{{name}}.image.repository
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
+        argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git
         argocd-image-updater.argoproj.io/git-branch: main
         argocd-image-updater.argoproj.io/write-back-target: helmvalues:/envs/{{env}}/app.values.yaml
@@ -68,49 +68,8 @@ spec:
         path: '{{chartPath}}'
         helm:
           valueFiles:
-            - '../../envs/{{env}}/default.values.yaml'
-            - '../../envs/{{env}}/app.values.yaml'
-          # 🧩 Embed PostSync Job as inline Helm manifest
-          templates:
-            - name: promote-job
-              manifest: |
-                {{- if or (eq "{{env}}" "dev") (eq "{{env}}" "qa") }}
-                apiVersion: batch/v1
-                kind: Job
-                metadata:
-                  name: promote-{{name}}-{{env}}-to-next
-                  annotations:
-                    argocd.argoproj.io/hook: PostSync
-                    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-                spec:
-                  template:
-                    spec:
-                      restartPolicy: Never
-                      containers:
-                        - name: promote
-                          image: argoproj/argocd:v2.10.0
-                          command: ["/bin/sh", "-c"]
-                          args:
-                            - |
-                              echo "Promotion hook triggered for {{name}} {{env}}"
-                              case "{{env}}" in
-                                dev) NEXT="qa" ;;
-                                qa) NEXT="prod" ;;
-                                *) echo "No promotion needed"; exit 0 ;;
-                              esac
-                              echo "Syncing {{name}}-${NEXT}"
-                              argocd app sync {{name}}-${NEXT} \
-                                --server argocd-server.argocd.svc.cluster.local \
-                                --username admin \
-                                --password "$ARGOCD_ADMIN_PWD" \
-                                --grpc-web
-                          env:
-                            - name: ARGOCD_ADMIN_PWD
-                              valueFrom:
-                                secretKeyRef:
-                                  name: argocd-initial-admin-secret
-                                  key: password
-                {{- end }}
+          - '../../envs/{{env}}/default.values.yaml'
+          - '../../envs/{{env}}/app.values.yaml'
       destination:
         server: https://kubernetes.docker.internal:6443
         namespace: '{{nsPattern}}'
@@ -119,4 +78,4 @@ spec:
           prune: true
           selfHeal: true
         syncOptions:
-          - CreateNamespace=true
+        - CreateNamespace=true
