@@ -42,7 +42,7 @@ spec:
               ARGOCD_ADMIN_PWD="SwlWTFxpGRmUPBN1"
 
               argocd app sync ${NEXT_APP} \
-                --server argocd-server.argocd.svc.cluster.local \
+                --server 127.0.0.1:8085 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web || { echo "❌ Sync failed"; exit 1; }
@@ -51,7 +51,7 @@ spec:
 
               # Optional: Wait until next app becomes healthy
               argocd app wait ${NEXT_APP} \
-                --server argocd-server.argocd.svc.cluster.local \
+                --server 127.0.0.1:8085 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --health --timeout 300 || {
