@@ -54,3 +54,23 @@ apps:
         paths:
         - path: /
           pathType: Prefix
+app3:
+  image:
+    tag: 1.1.0
+    repository: docker.io/rajarammurali513/app3
+app4:
+  image:
+    tag: 1.1.0
+    repository: docker.io/rajarammurali513/app4
+app1:
+  image:
+    tag: 1.1.0
+    repository: docker.io/rajarammurali513/app1
+app2:
+  image:
+    tag: 1.1.0
+    repository: docker.io/rajarammurali513/app2
+app5:
+  image:
+    tag: 1.1.0
+    repository: docker.io/rajarammurali513/app5
