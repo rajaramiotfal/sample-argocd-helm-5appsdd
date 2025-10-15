@@ -1,28 +1,30 @@
-{- $v := include "app.values" . | fromYaml }
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { include "app3.fullname" . }
-  labels: {- include "app3.labels" . | nindent 4 }
+  name: {{ include "app3.fullname" . }}
+  labels:
+    {{- include "app3.labels" . | nindent 4 }}
 spec:
-  replicas: { $v.replicaCount | default 1 }
+  replicas: {{ .Values.replicaCount }}
   selector:
-    matchLabels: {- include "app3.selectorLabels" . | nindent 6 }
+    matchLabels:
+      {{- include "app3.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels: {- include "app3.selectorLabels" . | nindent 8 }
+      labels:
+        {{- include "app3.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: { .Chart.Name }
-          image: "{ $v.image.repository }:{ $v.image.tag }"
-          imagePullPolicy: { $v.image.pullPolicy | default "IfNotPresent" }
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: { $v.containerPort | default 8080 }
+            - containerPort: {{ .Values.containerPort }}
           readinessProbe:
-            httpGet: {- printf "{ path: "/", port: %s }" (default 8080 $v.containerPort) | nindent 12 }
-            initialDelaySeconds: 2
-            periodSeconds: 5
+            httpGet:
+              path: /
+              port: {{ .Values.containerPort }}
           livenessProbe:
-            httpGet: {- printf "{ path: "/", port: %s }" (default 8080 $v.containerPort) | nindent 12 }
-            initialDelaySeconds: 10
-            periodSeconds: 10
+            httpGet:
+              path: /
+              port: {{ .Values.containerPort }}
