@@ -46,11 +46,7 @@ spec:
   template:
     metadata:
       name: '{{name}}-{{env}}'
-      namespace: argocd
-      labels:
-        app.kubernetes.io/managed-by: argocd
-        app.kubernetes.io/part-of: matrix-test
-        updated-for: postsync-test # to test post sync hook
+      namespace: argocd      
       annotations:
         argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: apps.{{name}}.image.repository
