@@ -40,17 +40,19 @@ spec:
 
               # ✅ Step 1: Login first
               ARGOCD_ADMIN_PWD="SwlWTFxpGRmUPBN1"   # <-- Hardcoded for testing
-              argocd login 127.0.0.1:8085 \
+              argocd login --server argocd-server.argocd.svc.cluster.local:443 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
 
               # ✅ Step 2: Sync the next environment
               argocd app sync ${NEXT_APP} \
+                --server argocd-server.argocd.svc.cluster.local:443 \
                 --grpc-web --insecure
 
               # ✅ Step 3: Wait until it's healthy
               argocd app wait ${NEXT_APP} \
+                --server argocd-server.argocd.svc.cluster.local:443 \
                 --health --timeout 300 --grpc-web --insecure
 
               echo "✅ ${NEXT_APP} promotion completed successfully!"
