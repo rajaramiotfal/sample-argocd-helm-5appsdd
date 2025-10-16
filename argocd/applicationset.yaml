@@ -70,8 +70,7 @@ spec:
         helm:
           valueFiles:
           - '../../envs/{{env}}/default.values.yaml'
-          - '../../envs/{{env}}/app.values.yaml'
-          ignoreMissingValueFiles: false
+          - '../../envs/{{env}}/app.values.yaml'          
           parameters:
             - name: env
               value: '{{env}}'
