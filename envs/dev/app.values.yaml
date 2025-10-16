@@ -6,7 +6,7 @@ apps:
       tag: "1.1.0"
     ingress:
       hosts:
-      - host: app1.qa.local
+      - host: app1.dev.local
         paths:
         - path: /
           pathType: Prefix
@@ -17,7 +17,7 @@ apps:
       tag: "1.1.0"
     ingress:
       hosts:
-      - host: app2.qa.local
+      - host: app2.dev.local
         paths:
         - path: /
           pathType: Prefix
@@ -28,7 +28,7 @@ apps:
       tag: 1.1.0
     ingress:
       hosts:
-      - host: app3.qa.local
+      - host: app3.dev.local
         paths:
         - path: /
           pathType: Prefix
@@ -39,7 +39,7 @@ apps:
       tag: 1.1.0
     ingress:
       hosts:
-      - host: app4.qa.local
+      - host: app4.dev.local
         paths:
         - path: /
           pathType: Prefix
@@ -50,27 +50,7 @@ apps:
       tag: 1.1.0
     ingress:
       hosts:
-      - host: app5.qa.local
+      - host: app5.dev.local
         paths:
         - path: /
           pathType: Prefix
-app3:
-  image:
-    tag: 1.2.0
-    repository: docker.io/rajarammurali513/app3
-app4:
-  image:
-    tag: 1.1.0
-    repository: docker.io/rajarammurali513/app4
-app1:
-  image:
-    tag: 1.1.0
-    repository: docker.io/rajarammurali513/app1
-app2:
-  image:
-    tag: 1.1.0
-    repository: docker.io/rajarammurali513/app2
-app5:
-  image:
-    tag: 1.1.0
-    repository: docker.io/rajarammurali513/app5
