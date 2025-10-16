@@ -71,6 +71,7 @@ spec:
           valueFiles:
           - 'envs/{{env}}/default.values.yaml'
           - 'envs/{{env}}/app.values.yaml'
+          ignoreMissingValueFiles: true
           parameters:
             - name: env
               value: '{{env}}'
