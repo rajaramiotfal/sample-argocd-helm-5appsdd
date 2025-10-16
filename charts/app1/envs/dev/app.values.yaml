@@ -72,5 +72,5 @@ app5:
     repository: docker.io/rajarammurali513/app5
 app1:
   image:
-    tag: 1.1.0
+    tag: 1.2.0
     repository: docker.io/rajarammurali513/app1
