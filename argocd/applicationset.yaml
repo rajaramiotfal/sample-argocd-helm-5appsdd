@@ -69,8 +69,8 @@ spec:
         path: '{{chartPath}}'
         helm:
           valueFiles:
-          - 'envs/{{env}}/default.values.yaml'
-          - 'envs/{{env}}/app.values.yaml'
+          - '../../envs/{{env}}/default.values.yaml'
+          - '../../envs/{{env}}/app.values.yaml'
           ignoreMissingValueFiles: true
           parameters:
             - name: env
