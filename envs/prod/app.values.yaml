@@ -3,7 +3,7 @@ apps:
     replicaCount: 2
     image:
       repository: docker.io/rajarammurali513/app1
-      tag: "1.1.0"
+      tag: "1.2.0"
     ingress:
       hosts:
       - host: app1.prod.local
