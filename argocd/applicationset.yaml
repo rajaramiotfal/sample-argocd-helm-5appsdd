@@ -53,18 +53,14 @@ spec:
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
-        argocd-image-updater.argoproj.io/write-back-target: envs/{{env}}/app.values.yaml
-        argocd-image-updater.argoproj.io/force-update: "true"   
+        argocd-image-updater.argoproj.io/write-back-target: helmvalues:values.yaml   
     spec:
       project: '{{project}}'
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
         path: '{{chartPath}}'
-        helm:
-          valueFiles:
-          - '../../envs/{{env}}/default.values.yaml'
-          - '../../envs/{{env}}/app.values.yaml'
+        helm:          
           parameters:
             - name: env
               value: '{{env}}'
