@@ -49,8 +49,8 @@ spec:
       namespace: argocd      
       annotations:
         argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: apps.{{name}}.image.repository
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: image.repository
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: image.tag
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
         argocd-image-updater.argoproj.io/write-back-target: helmvalues:values.yaml   
