@@ -53,7 +53,8 @@ spec:
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
-
+        argocd-image-updater.argoproj.io/write-back-target: helm-values   # ✅ add this
+        argocd-image-updater.argoproj.io/force-update: "true"   
     spec:
       project: '{{project}}'
       source:
