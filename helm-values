@@ -1,7 +1,7 @@
 helm:
   parameters:
   - name: env
-    value: dev
+    value: qa
     forcestring: false
   - name: apps.app1.image.repository
     value: docker.io/rajarammurali513/app1
