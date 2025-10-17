@@ -48,24 +48,12 @@ spec:
       name: '{{name}}-{{env}}'
       namespace: argocd      
       annotations:
-        argocd-image-updater.argoproj.io/image-list: >
-          app1=docker.io/rajarammurali513/app1,
-          app2=docker.io/rajarammurali513/app2,
-          app3=docker.io/rajarammurali513/app3,
-          app4=docker.io/rajarammurali513/app4,
-          app5=docker.io/rajarammurali513/app5
-        argocd-image-updater.argoproj.io/app1.helm.image-name: apps.app1.image.repository
-        argocd-image-updater.argoproj.io/app1.helm.image-tag:  apps.app1.image.tag
-        argocd-image-updater.argoproj.io/app2.helm.image-name: apps.app2.image.repository
-        argocd-image-updater.argoproj.io/app2.helm.image-tag:  apps.app2.image.tag
-        argocd-image-updater.argoproj.io/app3.helm.image-name: apps.app3.image.repository
-        argocd-image-updater.argoproj.io/app3.helm.image-tag:  apps.app3.image.tag
-        argocd-image-updater.argoproj.io/app4.helm.image-name: apps.app4.image.repository
-        argocd-image-updater.argoproj.io/app4.helm.image-tag:  apps.app4.image.tag
-        argocd-image-updater.argoproj.io/app5.helm.image-name: apps.app5.image.repository
-        argocd-image-updater.argoproj.io/app5.helm.image-tag:  apps.app5.image.tag
+        argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: apps.{{name}}.image.repository
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
+        argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
-        argocd-image-updater.argoproj.io/write-back-target: envs/{{env}}/app.values.yaml
+        argocd-image-updater.argoproj.io/write-back-target: helmvalues:envs/{{env}}/app.values.yaml
         argocd-image-updater.argoproj.io/force-update: "true"   
     spec:
       project: '{{project}}'
