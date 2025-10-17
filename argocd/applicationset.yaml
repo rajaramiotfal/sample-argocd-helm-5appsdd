@@ -52,15 +52,8 @@ spec:
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: apps.{{name}}.image.repository
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: apps.{{name}}.image.tag
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
-        argocd-image-updater.argoproj.io/write-back-method: git
-        argocd-image-updater.argoproj.io/git-branch: main
-        argocd-image-updater.argoproj.io/refresh: always 
-        argocd-image-updater.argoproj.io/write-back-target: helmvalues:/envs/{{env}}/app.values.yaml
-        argocd-image-updater.argoproj.io/app1.pull-secret: secret:argocd/regcred
-        argocd-image-updater.argoproj.io/app2.pull-secret: secret:argocd/regcred
-        argocd-image-updater.argoproj.io/app3.pull-secret: secret:argocd/regcred
-        argocd-image-updater.argoproj.io/app4.pull-secret: secret:argocd/regcred
-        argocd-image-updater.argoproj.io/app5.pull-secret: secret:argocd/regcred
+        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+
     spec:
       project: '{{project}}'
       source:
@@ -69,9 +62,8 @@ spec:
         path: '{{chartPath}}'
         helm:
           valueFiles:
-          - 'envs/{{env}}/default.values.yaml'
-          - 'envs/{{env}}/app.values.yaml'
-          ignoreMissingValueFiles: true
+          - '../../envs/{{env}}/default.values.yaml'
+          - '../../envs/{{env}}/app.values.yaml'
           parameters:
             - name: env
               value: '{{env}}'
