@@ -19,7 +19,7 @@ ingress:
   tls: []
 resources: {}
 # Optional block used by env files to override per app:
-apps: {app1: {image: {tag: 1.3.0, repository: docker.io/rajarammurali513/app1}}}
+
 # values.yaml
 nameOverride: ""
 fullnameOverride: ""
