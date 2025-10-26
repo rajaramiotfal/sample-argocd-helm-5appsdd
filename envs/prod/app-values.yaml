@@ -24,3 +24,5 @@ app1image:
   tag: 1.7.0
 app5image:
   tag: 1.7.0
+app3image:
+  tag: 1.7.0
