@@ -2,23 +2,22 @@ app1:
   image:
     repository: docker.io/rajarammurali513/app1
     tag: "1.6.0"
-
 app2:
   image:
     repository: docker.io/rajarammurali513/app2
     tag: "1.6.0"
-
 app3:
   image:
     repository: docker.io/rajarammurali513/app3
     tag: "1.6.0"
-
 app4:
   image:
     repository: docker.io/rajarammurali513/app4
     tag: "1.6.0"
-
 app5:
   image:
     repository: docker.io/rajarammurali513/app5
     tag: "1.6.0"
+image:
+  tag: 1.7.0
+  repository: docker.io/rajarammurali513/app5
