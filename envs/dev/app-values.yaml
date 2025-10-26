@@ -20,4 +20,4 @@ app5:
     tag: "1.6.0"
 image:
   tag: 1.7.0
-  repository: docker.io/rajarammurali513/app1
+  repository: docker.io/rajarammurali513/app2
