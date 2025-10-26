@@ -62,7 +62,7 @@ spec:
         path: '{{chartPath}}'
         helm:
           valueFiles:
-            - 'env-overlays/envs/{{env}}/app-values.yaml'        
+            - '../../envs/{{env}}/app-values.yaml'        
           parameters:
             - name: env
               value: '{{env}}'
