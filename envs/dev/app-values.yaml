@@ -18,13 +18,3 @@ app5:
   image:
     repository: docker.io/rajarammurali513/app5
     tag: "1.6.0"
-app4image:
-  tag: 1.7.0
-app1image:
-  tag: 1.7.0
-app3image:
-  tag: 1.7.0
-app2image:
-  tag: 1.7.0
-app5image:
-  tag: 1.7.0
