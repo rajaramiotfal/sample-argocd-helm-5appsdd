@@ -13,14 +13,17 @@ spec:
             clusterName: dev-cluster
             project: dev
             nsPattern: dev-ns
+            writeBack: git
           - env: qa
             clusterName: dev-cluster
             project: qa
             nsPattern: qa-ns
+            writeBack: none
           - env: prod
             clusterName: dev-cluster
             project: prod
             nsPattern: prod-ns
+            writeBack: none
       - list:
           elements:
           - name: app1
@@ -52,7 +55,7 @@ spec:
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: '{{name}}.image.tag'
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
-        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+        argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml' 
     spec:
       project: '{{project}}'

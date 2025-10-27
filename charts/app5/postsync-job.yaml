@@ -1,0 +1,92 @@
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next-{{ randAlphaNum 4 | lower }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: promote
+          image: quay.io/argoproj/argocd:v2.14.19   # ✅ CLI image with argocd binary
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
+
+              case "{{ .Values.env }}" in
+                dev)
+                  NEXT_ENV="qa"
+                  ;;
+                qa)
+                  NEXT_ENV="prod"
+                  ;;
+                *)
+                  echo "No promotion required for {{ .Values.env }}"
+                  exit 0
+                  ;;
+              esac
+
+              echo "Next environment is: ${NEXT_ENV}"
+              NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
+              echo "🔹 Preparing promotion PR for ${NEXT_APP}"
+
+              # --- Install required tools ---
+              apk add --no-cache git github-cli bash curl
+
+              # --- Git configuration ---
+              git config --global user.email "bot@argocd.local"
+              git config --global user.name "ArgoCD Bot"
+
+              # --- Clone repo using secure credentials ---
+              echo "🔹 Cloning repository..."
+              git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
+              cd repo
+
+              # ✅ Step 1: Login first
+              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
+              argocd login argocd-server.argocd.svc.cluster.local:443 \
+                --username admin \
+                --password "${ARGOCD_ADMIN_PWD}" \
+                --grpc-web --insecure
+
+              # --- Commit and push updated env values (example: QA→Prod promotion) ---
+              git add envs/${NEXT_ENV}/app-values.yaml || true
+              git commit -m "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" || echo "Nothing to commit"
+              git push origin $BRANCH
+
+              # --- Create a Pull Request for QA/Prod promotions ---
+              echo "🔹 Creating Pull Request..."
+              gh pr create \
+                --repo rajaramiotfal/sample-argocd-helm-5appsdd \
+                --base main \
+                --head $BRANCH \
+                --title "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" \
+                --body "Automated promotion by ArgoCD PostSync hook for {{ .Chart.Name }} ({{ .Values.env }})."
+                           
+
+              # ✅ Step 3: Wait until it's healthy
+              argocd app wait ${NEXT_APP} \
+                --health --timeout 300 --grpc-web --insecure
+
+              echo "✅ ${NEXT_APP} promotion completed successfully!"
+           env:
+            - name: GITHUB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: git_username
+            - name: GITHUB_PAT
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: git_token
+        
+{{- end }}
