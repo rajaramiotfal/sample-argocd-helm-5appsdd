@@ -79,10 +79,10 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: github-secret
-                  key: git_username
+                  key: username
             - name: GITHUB_PAT
               valueFrom:
                 secretKeyRef:
                   name: github-secret
-                  key: git_token
+                  key: password
 {{- end }}
