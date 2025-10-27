@@ -15,11 +15,12 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: quay.io/argoproj/argocd:v2.14.19   # ✅ CLI image with argocd binary
+          image: alpine/git:2.45.2   # ✅ CLI image with argocd binary
           command: ["/bin/sh", "-c"]
           args:
             - |
               set -e
+              apk add --no-cache bash curl github-cli
               echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
 
               case "{{ .Values.env }}" in
