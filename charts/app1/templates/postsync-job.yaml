@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 1
   template:
@@ -34,8 +35,9 @@ spec:
                   ;;
               esac
 
+              echo "Next environment is: ${NEXT_ENV}"
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
-              echo "🔹 Syncing next environment application: ${NEXT_APP}"
+              echo "🔹 Preparing promotion PR for ${NEXT_APP}"
 
               # ✅ Step 1: Login first
               ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
@@ -44,13 +46,43 @@ spec:
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
 
-              # ✅ Step 2: Sync the next environment
-              argocd app sync ${NEXT_APP} \
-                --grpc-web --insecure
+              apk add --no-cache git github-cli bash curl
+
+              git config --global user.email "bot@argocd.local"
+              git config --global user.name "ArgoCD Bot"
+
+              echo "🔹 Cloning repository..."
+              git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
+              cd repo
+
+              BRANCH="promote-${NEXT_APP}-$(date +%s)"
+              git checkout -b $BRANCH
+              git add envs/${NEXT_ENV}/app-values.yaml || true
+              git commit -m "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" || echo "Nothing to commit"
+              git push origin $BRANCH
+
+              echo "🔹 Creating Pull Request..."
+              gh pr create \
+                --repo rajaramiotfal/sample-argocd-helm-5appsdd \
+                --base main \
+                --head $BRANCH \
+                --title "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" \
+                --body "Automated promotion by ArgoCD PostSync hook for {{ .Chart.Name }} ({{ .Values.env }})."
 
               # ✅ Step 3: Wait until it's healthy
               argocd app wait ${NEXT_APP} \
                 --health --timeout 300 --grpc-web --insecure
 
               echo "✅ ${NEXT_APP} promotion completed successfully!"
+          env:
+            - name: GITHUB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: git_username
+            - name: GITHUB_PAT
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: git_token
 {{- end }}
