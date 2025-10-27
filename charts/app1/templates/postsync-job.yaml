@@ -61,8 +61,13 @@ spec:
 
               BRANCH="promote-${NEXT_APP}-$(date +%s)"
               git checkout -b $BRANCH
-              git add envs/${NEXT_ENV}/app-values.yaml || true
-              git commit -m "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" || echo "Nothing to commit"
+              if git diff --quiet envs/${NEXT_ENV}/app-values.yaml; then
+              echo "⚠️ No changes to promote for ${NEXT_ENV}, skipping PR creation."
+              exit 0
+              fi
+
+              git add envs/${NEXT_ENV}/app-values.yaml
+              git commit -m "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}"
               git push origin $BRANCH
 
               echo "🔹 Creating Pull Request..."
