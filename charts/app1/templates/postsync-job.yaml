@@ -89,4 +89,9 @@ spec:
                 secretKeyRef:
                   name: github-secret
                   key: password
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: token
 {{- end }}
