@@ -5,7 +5,7 @@ app1:
 app2:
   image:
     repository: docker.io/rajarammurali513/app2
-    tag: "1.6.0"
+    tag: "1.7.0"
 app3:
   image:
     repository: docker.io/rajarammurali513/app3
