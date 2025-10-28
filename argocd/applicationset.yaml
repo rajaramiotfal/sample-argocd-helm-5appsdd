@@ -1,63 +1,45 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-single-env
+  name: apps-${ENV_NAME}
   namespace: argocd
 spec:
   generators:
-    - list:
-        elements:
-          - name: app1
-            chartPath: charts/app1
-            image: docker.io/rajarammurali513/app1
-            semver: "~1"
-          - name: app2
-            chartPath: charts/app2
-            image: docker.io/rajarammurali513/app2
-            semver: "~1"
-          - name: app3
-            chartPath: charts/app3
-            image: docker.io/rajarammurali513/app3
-            semver: "~1"
-          - name: app4
-            chartPath: charts/app4
-            image: docker.io/rajarammurali513/app4
-            semver: "~1"
-          - name: app5
-            chartPath: charts/app5
-            image: docker.io/rajarammurali513/app5
-            semver: "~1"
-
+    - git:
+        repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
+        revision: main
+        directories:
+          - path: charts/*
   template:
     metadata:
-      name: '{{name}}-{{env}}'
+      name: '{{path.basename}}-${ENV_NAME}'
       namespace: argocd
       labels:
-        env: '{{env}}'
-        app: '{{name}}'
+        env: ${ENV_NAME}
+        app: '{{path.basename}}'
       annotations:
-        argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: '{{name}}.image.tag'
-        argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
+        argocd-image-updater.argoproj.io/image-list: '{{path.basename}}=docker.io/rajarammurali513/{{path.basename}}:~1'
+        argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-name: '{{path.basename}}.image.repository'
+        argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-tag: '{{path.basename}}.image.tag'
+        argocd-image-updater.argoproj.io/{{path.basename}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
-        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
+        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/${ENV_NAME}/app-values.yaml'
 
     spec:
-      project: '{{env}}'
+      project: ${ENV_NAME}
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
-        path: '{{chartPath}}'
+        path: '{{path}}'
         helm:
           valueFiles:
-            - '$repo/envs/{{env}}/app-values.yaml'
+            - '$repo/envs/${ENV_NAME}/app-values.yaml'
           parameters:
             - name: env
-              value: '{{env}}'
+              value: ${ENV_NAME}
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{env}}-ns'
+        namespace: ${NS_NAME}
       syncPolicy:
         automated:
           prune: true
