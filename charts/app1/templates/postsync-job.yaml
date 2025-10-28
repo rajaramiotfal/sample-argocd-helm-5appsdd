@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 1
   template:
