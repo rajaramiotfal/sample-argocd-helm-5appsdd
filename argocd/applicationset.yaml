@@ -1,52 +1,40 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-matrix-env-toggle
+  name: apps-single-env
   namespace: argocd
 spec:
   generators:
-  - matrix:
-      generators:
-      # Environment toggle — only deploy apps where env matches DEPLOY_ENV
-      - list:
-          elements:
-          - env: dev
-            namespace: dev-ns
-            project: dev
-          - env: qa
-            namespace: qa-ns
-            project: qa
-          - env: prod
-            namespace: prod-ns
-            project: prod
-      - list:
-          elements:
+    - list:
+        elements:
           - name: app1
             chartPath: charts/app1
             image: docker.io/rajarammurali513/app1
-            semver: ~1
+            semver: "~1"
           - name: app2
             chartPath: charts/app2
             image: docker.io/rajarammurali513/app2
-            semver: ~1
+            semver: "~1"
           - name: app3
             chartPath: charts/app3
             image: docker.io/rajarammurali513/app3
-            semver: ~1
+            semver: "~1"
           - name: app4
             chartPath: charts/app4
             image: docker.io/rajarammurali513/app4
-            semver: ~1
+            semver: "~1"
           - name: app5
             chartPath: charts/app5
             image: docker.io/rajarammurali513/app5
-            semver: ~1
+            semver: "~1"
+
   template:
     metadata:
       name: '{{name}}-{{env}}'
       namespace: argocd
       labels:
-        deploy-env: '{{env}}'
+        env: '{{env}}'
+        app: '{{name}}'
       annotations:
         argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
@@ -54,8 +42,9 @@ spec:
         argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
+
     spec:
-      project: '{{project}}'
+      project: '{{env}}'
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
@@ -68,7 +57,7 @@ spec:
               value: '{{env}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
+        namespace: '{{env}}-ns'
       syncPolicy:
         automated:
           prune: true
