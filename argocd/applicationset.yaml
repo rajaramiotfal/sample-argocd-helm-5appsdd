@@ -1,12 +1,26 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-all-envs
+  name: apps-matrix-env-toggle
   namespace: argocd
 spec:
   generators:
-    - list:
-        elements:
+  - matrix:
+      generators:
+      # Environment toggle — only deploy apps where env matches DEPLOY_ENV
+      - list:
+          elements:
+          - env: dev
+            namespace: dev-ns
+            project: dev
+          - env: qa
+            namespace: qa-ns
+            project: qa
+          - env: prod
+            namespace: prod-ns
+            project: prod
+      - list:
+          elements:
           - name: app1
             chartPath: charts/app1
             image: docker.io/rajarammurali513/app1
@@ -27,13 +41,13 @@ spec:
             chartPath: charts/app5
             image: docker.io/rajarammurali513/app5
             semver: ~1
-
   template:
     metadata:
       name: '{{name}}-{{env}}'
       namespace: argocd
+      labels:
+        deploy-env: '{{env}}'
       annotations:
-        # --- Image Updater integration ---
         argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
         argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: '{{name}}.image.tag'
@@ -41,7 +55,7 @@ spec:
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
     spec:
-      project: '{{env}}'
+      project: '{{project}}'
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
@@ -54,47 +68,10 @@ spec:
               value: '{{env}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{env}}-ns'
+        namespace: '{{namespace}}'
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-  templatePatch:
-    # Environment toggle – override env via parameter (e.g. DEPLOY_ENV)
-    - when: "{{DEPLOY_ENV}} == 'dev'"
-      patch: |
-        - op: replace
-          path: /spec/project
-          value: dev
-        - op: replace
-          path: /spec/destination/namespace
-          value: dev-ns
-        - op: replace
-          path: /spec/source/helm/valueFiles/0
-          value: '$repo/envs/dev/app-values.yaml'
-
-    - when: "{{DEPLOY_ENV}} == 'qa'"
-      patch: |
-        - op: replace
-          path: /spec/project
-          value: qa
-        - op: replace
-          path: /spec/destination/namespace
-          value: qa-ns
-        - op: replace
-          path: /spec/source/helm/valueFiles/0
-          value: '$repo/envs/qa/app-values.yaml'
-
-    - when: "{{DEPLOY_ENV}} == 'prod'"
-      patch: |
-        - op: replace
-          path: /spec/project
-          value: prod
-        - op: replace
-          path: /spec/destination/namespace
-          value: prod-ns
-        - op: replace
-          path: /spec/source/helm/valueFiles/0
-          value: '$repo/envs/prod/app-values.yaml'
