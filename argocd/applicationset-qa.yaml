@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps-qa
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: app1
+            chartPath: charts/app1
+            image: docker.io/rajarammurali513/app1
+            semver: ~1
+          - name: app2
+            chartPath: charts/app2
+            image: docker.io/rajarammurali513/app2
+            semver: ~1
+          - name: app3
+            chartPath: charts/app3
+            image: docker.io/rajarammurali513/app3
+            semver: ~1
+          - name: app4
+            chartPath: charts/app4
+            image: docker.io/rajarammurali513/app4
+            semver: ~1
+          - name: app5
+            chartPath: charts/app5
+            image: docker.io/rajarammurali513/app5
+            semver: ~1
+
+  template:
+    metadata:
+      name: '{{name}}-qa'
+      namespace: argocd
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
+        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: '{{name}}.image.tag'
+        argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
+        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/qa/app-values.yaml'
+    spec:
+      project: qa
+      source:
+        repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
+        targetRevision: main
+        path: '{{chartPath}}'
+        helm:
+          valueFiles:
+            - '$repo/envs/qa/app-values.yaml'
+      destination:
+        server: https://kubernetes.docker.internal:6443
+        namespace: qa-ns
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
