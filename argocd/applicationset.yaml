@@ -5,18 +5,7 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  - list:
-        elements:
-          - env: ${ENV_NAME}
-            ns: ${NS_NAME}
-            autosync: "true"
-          - env: ${ENV_NAME}
-            ns: ${NS_NAME}
-            autosync: "false"
-          - env: ${ENV_NAME}
-            ns: ${NS_NAME}
-            autosync: "false"
-  - git:
+    - git:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         revision: main
         directories:
@@ -52,10 +41,8 @@ spec:
         server: https://kubernetes.default.svc
         namespace: ${NS_NAME}
       syncPolicy:
-        {{- if eq .autosync "true" }}
         automated:
           prune: true
           selfHeal: true
-        {{- else }}
         syncOptions:
           - CreateNamespace=true
