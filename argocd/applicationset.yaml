@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-${env}
+  name: apps-${ENV_NAME}
   namespace: argocd
 spec:
   generators:
@@ -25,10 +25,10 @@ spec:
                 - path: charts/*
   template:
     metadata:
-      name: '{{path.basename}}-{{env}}'
+      name: '{{path.basename}}-{{ENV_NAME}}'
       namespace: argocd
       labels:
-        env: '{{env}}'
+        env: '{{ENV_NAME}}'
         app: '{{path.basename}}'
       annotations:
         # --- Argo CD Image Updater annotations ---
@@ -37,28 +37,26 @@ spec:
         argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-tag: '{{path.basename}}.image.tag'
         argocd-image-updater.argoproj.io/{{path.basename}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
-        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
+        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{ENV_NAME}}/app-values.yaml'
     spec:
-      project: '{{env}}'
+      project: '{{ENV_NAME}}'
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
         path: '{{path}}'
         helm:
           valueFiles:
-            - '$repo/envs/{{env}}/app-values.yaml'
+            - '$repo/envs/{{ENV_NAME}}/app-values.yaml'
           parameters:
             - name: env
-              value: '{{env}}'
+              value: '{{ENV_NAME}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ns}}'
+        namespace: '{{NS_NAME}}'
       syncPolicy:
-        {{- if eq .writeBack "git" }}
         automated:
           prune: true
           selfHeal: true
-        {{- else }}
         syncOptions:
-          - CreateNamespace=true
-        {{- end }}
+        - CreateNamespace=true
+
