@@ -11,7 +11,13 @@ spec:
               elements:
                 - env: dev
                   ns: dev-ns
-                  writeBack: git                
+                  writeBack: git
+                - env: qa
+                  ns: qa-ns
+                  writeBack: none
+                - env: prod
+                  ns: prod-ns
+                  writeBack: none
           - git:
               repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
               revision: main
