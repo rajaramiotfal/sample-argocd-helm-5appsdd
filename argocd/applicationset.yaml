@@ -9,9 +9,9 @@ spec:
         generators:
           - list:
               elements:
-                - env: {{env}}
-                  ns: {{ns}}
-                  writeBack: {{writegit}}                
+                - env: '{{env}}''
+                  ns: '{{ns}}''
+                  writeBack: '{{writegit}}'                
           - git:
               repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
               revision: main
