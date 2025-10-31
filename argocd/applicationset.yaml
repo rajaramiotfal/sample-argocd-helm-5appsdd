@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-matrix
+  name: apps-${ENV_NAME}
   namespace: argocd
 spec:
   generators:
@@ -9,9 +9,9 @@ spec:
         generators:
           - list:
               elements:
-                - env: '{{env}}'
-                  ns: '{{ns}}'
-                  writeBack: '{{writegit}}'                
+                - env: ${ENV_NAME}
+                  ns: ${NS_NAME}
+                  writeBack: ${WRITEBACK_METHOD}
           - git:
               repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
               revision: main
@@ -25,12 +25,11 @@ spec:
         env: '{{env}}'
         app: '{{path.basename}}'
       annotations:
-        # --- Argo CD Image Updater annotations ---
         argocd-image-updater.argoproj.io/image-list: '{{path.basename}}=docker.io/rajarammurali513/{{path.basename}}:~1'
         argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-name: '{{path.basename}}.image.repository'
         argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-tag: '{{path.basename}}.image.tag'
         argocd-image-updater.argoproj.io/{{path.basename}}.update-strategy: semver
-        argocd-image-updater.argoproj.io/write-back-method: '{{writegit}}:secret:argocd/argocd-image-updater-secret'
+        argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
     spec:
       project: '{{env}}'
@@ -52,4 +51,4 @@ spec:
           prune: true
           selfHeal: true       
         syncOptions:
-          - CreateNamespace=true
+          - CreateNamespace=true       
