@@ -9,10 +9,15 @@ spec:
         generators:
           - list:
               elements:
-                - env: {{env}}
-                  ns: {{ns}}
-                  writeBack: {{wbValue}}
-                  
+                - env: dev
+                  ns: dev-ns
+                  writeBack: git
+                - env: qa
+                  ns: qa-ns
+                  writeBack: none
+                - env: prod
+                  ns: prod-ns
+                  writeBack: none
           - git:
               repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
               revision: main
@@ -31,7 +36,7 @@ spec:
         argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-name: '{{path.basename}}.image.repository'
         argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-tag: '{{path.basename}}.image.tag'
         argocd-image-updater.argoproj.io/{{path.basename}}.update-strategy: semver
-        argocd-image-updater.argoproj.io/write-back-method: '{{wbValue}}:secret:argocd/argocd-image-updater-secret'
+        argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
     spec:
       project: '{{env}}'
