@@ -54,7 +54,7 @@ spec:
               until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
                     | grep -q 'Health Status: *Healthy'; do
                 echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                sleep 10000
+                sleep 100000
               done
 
 
