@@ -1,8 +1,8 @@
-{{- if or (eq .Values.env "dev") (eq .Values.env "qa") (eq .Values.env "prod") }}
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-to-next-{{ randAlphaNum 4 | lower }}
+  name: promote-{{ .Chart.Name }}-{{ .Values.env }}-{{ randAlphaNum 4 | lower }}
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
@@ -27,9 +27,8 @@ spec:
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
 
-              echo "🔹 ArgoCD Promotion Hook triggered for $APP ($ENV)"
+              echo "🔹 PostSync hook triggered for $APP ($ENV)"
 
-              # Decide next environment
               case "$ENV" in
                 dev)
                   NEXT_ENV="qa"
@@ -37,49 +36,54 @@ spec:
                 qa)
                   NEXT_ENV="prod"
                   ;;
-                prod)
-                  echo "✅ Production reached; no further promotion."
-                  exit 0
-                  ;;
                 *)
-                  echo "❌ Unknown environment: $ENV"
-                  exit 1
+                  echo "✅ No promotion needed for $ENV"
+                  exit 0
                   ;;
               esac
 
               echo "Next environment is: ${NEXT_ENV}"
 
-              # 🔹 Step 1: ArgoCD Login
-              echo "🔹 Logging in to ArgoCD..."
+              # Step 1 — Wait for THIS app to be Healthy + Synced + Last Sync OK
+              echo "🔹 Waiting for $APP-$ENV to become Healthy & Synced..."
+              MAX_RETRIES=20
+              COUNT=0
+
+              while true; do
+                APP_STATUS=$(argocd app get $APP-$ENV --grpc-web --insecure --output json | jq -r '.status.health.status')
+                SYNC_STATUS=$(argocd app get $APP-$ENV --grpc-web --insecure --output json | jq -r '.status.sync.status')
+                LAST_SYNC=$(argocd app get $APP-$ENV --grpc-web --insecure | grep -E 'Last Sync' | awk '{print $3}')
+
+                echo "🔍 Health=$APP_STATUS, Sync=$SYNC_STATUS, LastSync=$LAST_SYNC"
+
+                if [ "$APP_STATUS" = "Healthy" ] && [ "$SYNC_STATUS" = "Synced" ]; then
+                  echo "✅ $APP-$ENV is Healthy, Synced and stable!"
+                  break
+                fi
+
+                COUNT=$((COUNT + 1))
+                if [ $COUNT -ge $MAX_RETRIES ]; then
+                  echo "❌ Timeout waiting for $APP-$ENV (Health=$APP_STATUS, Sync=$SYNC_STATUS)"
+                  exit 1
+                fi
+
+                sleep 10
+              done
+
+              # ✅ Step 1: Login first
+              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
               argocd login argocd-server.argocd.svc.cluster.local:443 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
 
-              # 🔹 Step 2: Sequentially ensure apps are healthy before next
-              echo "🔹 Waiting for all apps in ${ENV} to be Healthy and Synced..."
-              for a in app1 app2 app3 app4 app5; do
-                APP_FULL="${a}-${ENV}"
-                echo "🔍 Checking ${APP_FULL} status..."
-                until argocd app get ${APP_FULL} --grpc-web --insecure | grep -q 'Health Status: *Healthy'; do
-                  echo "⏳ Still waiting for ${APP_FULL}..."
-                  sleep 10
-                done
-                echo "✅ ${APP_FULL} is Healthy!"
-              done
 
-              echo "🎯 All ${ENV} apps are healthy; starting promotion to ${NEXT_ENV}"
-
-              # 🔹 Step 3: Clone repo and prepare PR
-              apk add --no-cache git
+              # Step 3 — Clone repo and promote to next env
               git config --global user.email "bot@argocd.local"
               git config --global user.name "ArgoCD Bot"
-
-              echo "🔹 Cloning GitHub repository..."
               git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
               cd repo
 
-              # Copy app-values.yaml from current env to next env
               cp envs/${ENV}/app-values.yaml envs/${NEXT_ENV}/app-values.yaml
 
               BRANCH="promote-${APP}-${NEXT_ENV}-$(date +%s)"
@@ -90,7 +94,6 @@ spec:
                 exit 0
               fi
 
-              echo "🔹 Committing promotion changes..."
               git add envs/${NEXT_ENV}/app-values.yaml
               git commit -m "Promote ${APP} from ${ENV} → ${NEXT_ENV}"
               git push origin $BRANCH
@@ -101,7 +104,7 @@ spec:
                 --base main \
                 --head $BRANCH \
                 --title "Promote ${APP} from ${ENV} → ${NEXT_ENV}" \
-                --body "Automated promotion triggered after successful healthy sync of all ${ENV} apps."
+                --body "Automated promotion after successful Healthy sync for ${APP} (${ENV})."
 
               echo "✅ Promotion PR created successfully!"
           env:
