@@ -49,7 +49,7 @@ spec:
               echo "🔹 Preparing promotion PR for ${NEXT_APP}"
 
               # ✅ Step 1: Login first
-              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
+              ARGOCD_ADMIN_PWD="xETEiQf5PXpQiv8F"   # <-- Hardcoded for testing
               argocd login argocd-server.argocd.svc.cluster.local:443 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
