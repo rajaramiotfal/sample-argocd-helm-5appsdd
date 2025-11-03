@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-app'{{path.basename}}'
+  name: apps-matrix-'{{path.basename}}'
   namespace: argocd
 spec:
   generators:
