@@ -53,32 +53,13 @@ spec:
                 --grpc-web --insecure
 
 
-              # Step 1 — Wait for THIS app to be Healthy + Synced + Last Sync OK
-              echo "🔹 Waiting for $APP-$ENV to become Healthy & Synced..."
-              MAX_RETRIES=20
-              COUNT=0
-
-              while true; do
-                APP_STATUS=$(argocd app get $APP-$ENV --grpc-web --insecure --output json | jq -r '.status.health.status')
-                SYNC_STATUS=$(argocd app get $APP-$ENV --grpc-web --insecure --output json | jq -r '.status.sync.status')
-                LAST_SYNC=$(argocd app get $APP-$ENV --grpc-web --insecure | grep -E 'Last Sync' | awk '{print $3}')
-
-                echo "🔍 Health=$APP_STATUS, Sync=$SYNC_STATUS, LastSync=$LAST_SYNC"
-
-                if [ "$APP_STATUS" = "Healthy" ] && [ "$SYNC_STATUS" = "Synced" ]; then
-                  echo "✅ $APP-$ENV is Healthy, Synced and stable!"
-                  break
-                fi
-
-                COUNT=$((COUNT + 1))
-                if [ $COUNT -ge $MAX_RETRIES ]; then
-                  echo "❌ Timeout waiting for $APP-$ENV (Health=$APP_STATUS, Sync=$SYNC_STATUS)"
-                  exit 1
-                fi
-
+              # Step 1 — Wait for THIS app to be Healthy
+              echo "🔹 Waiting for $APP-$ENV to become Healthy..."
+              until argocd app get $APP-$ENV --grpc-web --insecure | grep -q 'Health Status: *Healthy'; do
+                echo "⏳ Still waiting for $APP-$ENV..."
                 sleep 10
               done
-
+              echo "✅ $APP-$ENV is Healthy!"
               
 
               # Step 3 — Clone repo and promote to next env
