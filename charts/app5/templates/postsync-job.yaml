@@ -29,6 +29,7 @@ spec:
               chmod +x /usr/local/bin/argocd
 
               echo "🔹 PostSync hook triggered for $APP ($ENV)"
+              apt-get update && apt-get install -y jq
 
               case "$ENV" in
                 dev)
