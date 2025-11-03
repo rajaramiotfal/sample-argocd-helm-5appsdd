@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-${ENV_NAME}
+  name: apps-{{env}}
   namespace: argocd
 spec:
   generators:
@@ -10,9 +10,9 @@ spec:
           # 1️⃣ Environment list
           - list:
               elements:
-                - env: ${ENV_NAME}
-                  ns: ${NS_NAME}
-                  writeBack: ${WRITEBACK_METHOD}
+                - env: {{env}}
+                  ns: {{ns}}
+                  writeBack: {{WRITEBACK_METHOD}}
           # 2️⃣ Application list (with chart path & image)
           - list:
               elements:
