@@ -1,60 +1,34 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-{{name}}-{{env}}
+  name: apps-${ENV_NAME}
   namespace: argocd
 spec:
   generators:
     - matrix:
         generators:
-          # 1️⃣ Environment list
           - list:
               elements:
                 - env: ${ENV_NAME}
                   ns: ${NS_NAME}
                   writeBack: ${WRITEBACK_METHOD}
-          # 2️⃣ Application list (with chart path & image)
-          - list:
-              elements:
-                - name: app1
-                  chartPath: charts/app1
-                  image: docker.io/rajarammurali513/app1
-                  semver: "~1"
-                  syncWave: "1"
-                - name: app2
-                  chartPath: charts/app2
-                  image: docker.io/rajarammurali513/app2
-                  semver: "~1"
-                  syncWave: "2"
-                - name: app3
-                  chartPath: charts/app3
-                  image: docker.io/rajarammurali513/app3
-                  semver: "~1"
-                  syncWave: "3"
-                - name: app4
-                  chartPath: charts/app4
-                  image: docker.io/rajarammurali513/app4
-                  semver: "~1"
-                  syncWave: "4"
-                - name: app5
-                  chartPath: charts/app5
-                  image: docker.io/rajarammurali513/app5
-                  semver: "~1"
-                  syncWave: "5"
-
+          - git:
+              repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
+              revision: main
+              directories:
+                - path: charts/*
   template:
     metadata:
-      name: '{{name}}-{{env}}'
+      name: '{{path.basename}}-{{env}}'
       namespace: argocd
       labels:
         env: '{{env}}'
-        app: '{{name}}'
+        app: '{{path.basename}}'
       annotations:
-        argocd.argoproj.io/sync-wave: '{{syncWave}}'
-        argocd-image-updater.argoproj.io/image-list: '{{name}}={{image}}:{{semver}}'
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-name: '{{name}}.image.repository'
-        argocd-image-updater.argoproj.io/{{name}}.helm.image-tag: '{{name}}.image.tag'
-        argocd-image-updater.argoproj.io/{{name}}.update-strategy: semver
+        argocd-image-updater.argoproj.io/image-list: '{{path.basename}}=docker.io/rajarammurali513/{{path.basename}}:~1'
+        argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-name: '{{path.basename}}.image.repository'
+        argocd-image-updater.argoproj.io/{{path.basename}}.helm.image-tag: '{{path.basename}}.image.tag'
+        argocd-image-updater.argoproj.io/{{path.basename}}.update-strategy: semver
         argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
     spec:
@@ -62,7 +36,7 @@ spec:
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
-        path: '{{chartPath}}'
+        path: '{{path}}'
         helm:
           valueFiles:
             - '$repo/envs/{{env}}/app-values.yaml'
@@ -72,9 +46,9 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ns}}'
-      syncPolicy:
+      syncPolicy:        
         automated:
           prune: true
-          selfHeal: true
+          selfHeal: true       
         syncOptions:
-          - CreateNamespace=true
+          - CreateNamespace=true    
