@@ -23,14 +23,12 @@ spec:
               APP="{{ .Chart.Name }}"
               ENV="{{ .Values.env }}"
 
-              apk add --no-cache bash curl github-cli
+              apk add --no-cache bash curl github-cli jq
               echo "🔹 Installing ArgoCD CLI..."
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
 
-              echo "🔹 PostSync hook triggered for $APP ($ENV)"
-
-              apt-get update && apt-get install -y jq
+              echo "🔹 PostSync hook triggered for $APP ($ENV)"      
 
               case "$ENV" in
                 dev)
