@@ -60,4 +60,3 @@ spec:
 
               echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
 {{- end }}
-{{- end }}
