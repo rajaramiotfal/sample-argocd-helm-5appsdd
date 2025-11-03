@@ -26,12 +26,7 @@ spec:
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
             
-                # Wait for this app to reach Healthy+Synced
-                until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                        | grep -q 'Health Status: *Healthy'; do
-                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                    sleep 10
-                done
+              
 
               echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
               echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
@@ -59,6 +54,13 @@ spec:
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
+                # Wait for this app to reach Healthy+Synced
+
+              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
+                        | grep -q 'Health Status: *Healthy'; do
+                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
+                    sleep 10
+                done  
 
               apk add --no-cache git github-cli bash curl
 
