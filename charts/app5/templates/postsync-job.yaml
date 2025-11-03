@@ -19,6 +19,8 @@ spec:
           args:
             - |
               set -e
+              APP_NAME="{{ .Chart.Name }}"
+              CURRENT_ENV="{{ .Values.env }}"
               apk add --no-cache bash curl github-cli
               echo "🔹 Installing ArgoCD CLI..."
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
