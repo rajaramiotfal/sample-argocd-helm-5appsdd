@@ -45,6 +45,14 @@ spec:
 
               echo "Next environment is: ${NEXT_ENV}"
 
+               # ✅ Step 1: Login first
+              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
+              argocd login argocd-server.argocd.svc.cluster.local:443 \
+                --username admin \
+                --password "${ARGOCD_ADMIN_PWD}" \
+                --grpc-web --insecure
+
+
               # Step 1 — Wait for THIS app to be Healthy + Synced + Last Sync OK
               echo "🔹 Waiting for $APP-$ENV to become Healthy & Synced..."
               MAX_RETRIES=20
@@ -71,13 +79,7 @@ spec:
                 sleep 10
               done
 
-              # ✅ Step 1: Login first
-              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
-              argocd login argocd-server.argocd.svc.cluster.local:443 \
-                --username admin \
-                --password "${ARGOCD_ADMIN_PWD}" \
-                --grpc-web --insecure
-
+             
 
               # Step 3 — Clone repo and promote to next env
               git config --global user.email "bot@argocd.local"
