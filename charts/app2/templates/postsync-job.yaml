@@ -61,24 +61,23 @@ spec:
               # Copy app-values.yaml from current env to next env
               cp envs/{{ .Values.env }}/app-values.yaml envs/${NEXT_ENV}/app-values.yaml
 
-              BRANCH="promote-${NEXT_APP}-$(date +%s)"
-              git checkout -b $BRANCH
-              if git diff --quiet envs/${NEXT_ENV}/app-values.yaml; then
-              echo "⚠️ No changes to promote for ${NEXT_ENV}, skipping PR creation."
-              exit 0
+              # Detect and reuse existing PR branch
+              BRANCH_NAME="promote-${APP_NAME}-${NEXT_ENV}"
+
+              if git ls-remote --heads origin ${BRANCH_NAME} | grep -q ${BRANCH_NAME}; then
+                echo "⚠️ Branch ${BRANCH_NAME} already exists, skipping PR creation."
+                exit 0
               fi
 
+              git checkout -b ${BRANCH_NAME}
               git add envs/${NEXT_ENV}/app-values.yaml
               git commit -m "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}"
-              git push origin $BRANCH
+              git push origin ${BRANCH_NAME}
 
-              echo "🔹 Creating Pull Request..."
-              gh pr create \
-                --repo rajaramiotfal/sample-argocd-helm-5appsdd \
-                --base main \
-                --head $BRANCH \
-                --title "Promote ${NEXT_APP} from {{ .Values.env }} to ${NEXT_ENV}" \
-                --body "Automated promotion by ArgoCD PostSync hook for {{ .Chart.Name }} ({{ .Values.env }})."
+              # Create PR only if no existing one
+              gh pr create --base main --head ${BRANCH_NAME} \
+                --title "Promote ${APP_NAME} to ${NEXT_ENV}" \
+                --body "Automated promotion from ${CURRENT_ENV} → ${NEXT_ENV}"  
 
               # ✅ Step 3: Wait until it's healthy
               argocd app wait ${NEXT_APP} \
