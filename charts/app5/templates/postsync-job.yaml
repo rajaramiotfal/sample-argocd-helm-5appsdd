@@ -1,4 +1,4 @@
-{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") (eq .Values.env "prod") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -14,77 +14,115 @@ spec:
       restartPolicy: Never
       containers:
         - name: promote
-          image: alpine/git:2.45.2   # ✅ CLI image with argocd binary
+          image: alpine/git:2.45.2
           command: ["/bin/sh", "-c"]
           args:
             - |
               set -e
-              APP_NAME="{{ .Chart.Name }}"
-              CURRENT_ENV="{{ .Values.env }}"
+              APP="{{ .Chart.Name }}"
+              ENV="{{ .Values.env }}"
+
               apk add --no-cache bash curl github-cli
               echo "🔹 Installing ArgoCD CLI..."
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
-              echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
 
-              case "{{ .Values.env }}" in
+              echo "🔹 ArgoCD Promotion Hook triggered for $APP ($ENV)"
+
+              # Decide next environment
+              case "$ENV" in
                 dev)
                   NEXT_ENV="qa"
                   ;;
                 qa)
                   NEXT_ENV="prod"
                   ;;
-                *)
-                  echo "No promotion required for {{ .Values.env }}"
+                prod)
+                  echo "✅ Production reached; no further promotion."
                   exit 0
+                  ;;
+                *)
+                  echo "❌ Unknown environment: $ENV"
+                  exit 1
                   ;;
               esac
 
               echo "Next environment is: ${NEXT_ENV}"
-              
-              # ✅ Step 1: Login first
-              ARGOCD_ADMIN_PWD="in2tCSuTIp2nA4qL"   # <-- Hardcoded for testing
+
+              # 🔹 Step 1: ArgoCD Login
+              echo "🔹 Logging in to ArgoCD..."
               argocd login argocd-server.argocd.svc.cluster.local:443 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
 
-              
-              #!/bin/bash
-
-              APP_NAME="{{ .Chart.Name }}-{{ .Values.env }}"
-              echo "🔍 Waiting for Argo CD app '$APP_NAME' to reach Synced + Healthy state..."
-
-              # Timeout after 10 minutes (600s)
-              TIMEOUT=600
-              INTERVAL=10
-              START_TIME=$(date +%s)
-
-              while true; do
-                STATUS=$(argocd app get "$APP_NAME" --grpc-web --insecure 2>/dev/null)
-
-                HEALTH=$(echo "$STATUS" | grep -Eo "Health Status:\s+\S+" | awk '{print $3}')
-                SYNC=$(echo "$STATUS" | grep -Eo "Sync Status:\s+\S+" | awk '{print $3}')
-                LAST_SYNC=$(echo "$STATUS" | grep -E "Last Synced" || true)
-
-                if [[ "$HEALTH" == "Healthy" && "$SYNC" == "Synced" && -n "$LAST_SYNC" ]]; then
-                  echo "✅ ArgoCD app '$APP_NAME' is Synced and Healthy!"
-                  break
-                else
-                  echo "⏳ Waiting... Health=$HEALTH, Sync=$SYNC, LastSyncDetected=$([[ -n "$LAST_SYNC" ]] && echo yes || echo no)"
-                fi
-
-                # Timeout check
-                CURRENT_TIME=$(date +%s)
-                ELAPSED=$((CURRENT_TIME - START_TIME))
-                if [[ $ELAPSED -ge $TIMEOUT ]]; then
-                  echo "❌ Timeout waiting for '$APP_NAME' to reach Synced + Healthy."
-                  exit 1
-                fi
-
-                sleep $INTERVAL
+              # 🔹 Step 2: Sequentially ensure apps are healthy before next
+              echo "🔹 Waiting for all apps in ${ENV} to be Healthy and Synced..."
+              for a in app1 app2 app3 app4 app5; do
+                APP_FULL="${a}-${ENV}"
+                echo "🔍 Checking ${APP_FULL} status..."
+                until argocd app get ${APP_FULL} --grpc-web --insecure | grep -q 'Health Status: *Healthy'; do
+                  echo "⏳ Still waiting for ${APP_FULL}..."
+                  sleep 10
+                done
+                echo "✅ ${APP_FULL} is Healthy!"
               done
 
+              echo "🎯 All ${ENV} apps are healthy; starting promotion to ${NEXT_ENV}"
 
-              echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
+              # 🔹 Step 3: Clone repo and prepare PR
+              apk add --no-cache git
+              git config --global user.email "bot@argocd.local"
+              git config --global user.name "ArgoCD Bot"
+
+              echo "🔹 Cloning GitHub repository..."
+              git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
+              cd repo
+
+              # Copy app-values.yaml from current env to next env
+              cp envs/${ENV}/app-values.yaml envs/${NEXT_ENV}/app-values.yaml
+
+              BRANCH="promote-${APP}-${NEXT_ENV}-$(date +%s)"
+              git checkout -b $BRANCH
+
+              if git diff --quiet envs/${NEXT_ENV}/app-values.yaml; then
+                echo "⚠️ No changes to promote for ${NEXT_ENV}, skipping PR creation."
+                exit 0
+              fi
+
+              echo "🔹 Committing promotion changes..."
+              git add envs/${NEXT_ENV}/app-values.yaml
+              git commit -m "Promote ${APP} from ${ENV} → ${NEXT_ENV}"
+              git push origin $BRANCH
+
+              echo "🔹 Creating Pull Request..."
+              gh pr create \
+                --repo rajaramiotfal/sample-argocd-helm-5appsdd \
+                --base main \
+                --head $BRANCH \
+                --title "Promote ${APP} from ${ENV} → ${NEXT_ENV}" \
+                --body "Automated promotion triggered after successful healthy sync of all ${ENV} apps."
+
+              echo "✅ Promotion PR created successfully!"
+          env:
+            - name: GITHUB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: username
+            - name: GITHUB_PAT
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: password
+            - name: GH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: token
+            - name: ARGOCD_ADMIN_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-initial-admin-secret
+                  key: password
 {{- end }}
