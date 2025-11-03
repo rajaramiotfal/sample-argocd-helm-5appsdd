@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: '{{path.basename}}-{{env}}'
+  name: apps-'{{randAlphaNum 5 | lower}}'
   namespace: argocd
 spec:
   generators:
