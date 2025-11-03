@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: apps-deployet-all
+  name: apps-${ENV_NAME}
   namespace: argocd
 spec:
   generators:
@@ -10,9 +10,9 @@ spec:
           # 1️⃣ Environment list
           - list:
               elements:
-                - env: '{{env}}'
-                  ns: '{{ns}}'
-                  writeBack: '{{WRITEBACK_METHOD}}'
+                - env: ${ENV_NAME}
+                  ns: ${NS_NAME}
+                  writeBack: ${WRITEBACK_METHOD}
           # 2️⃣ Application list (with chart path & image)
           - list:
               elements:
@@ -58,7 +58,7 @@ spec:
         argocd-image-updater.argoproj.io/write-back-method: '{{writeBack}}:secret:argocd/argocd-image-updater-secret'
         argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:/envs/{{env}}/app-values.yaml'
     spec:
-      project: default
+      project: '{{env}}'
       source:
         repoURL: https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git
         targetRevision: main
