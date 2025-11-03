@@ -50,11 +50,39 @@ spec:
                 --grpc-web --insecure
 
               
-              # Wait for this app to reach Healthy+Synced
-              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                    | grep -q 'Health Status: *Healthy'; do
-                echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                sleep 100000
+              #!/bin/bash
+
+              APP_NAME="{{ .Chart.Name }}-{{ .Values.env }}"
+              echo "🔍 Waiting for Argo CD app '$APP_NAME' to reach Synced + Healthy state..."
+
+              # Timeout after 10 minutes (600s)
+              TIMEOUT=600
+              INTERVAL=10
+              START_TIME=$(date +%s)
+
+              while true; do
+                STATUS=$(argocd app get "$APP_NAME" --grpc-web --insecure 2>/dev/null)
+
+                HEALTH=$(echo "$STATUS" | grep -Eo "Health Status:\s+\S+" | awk '{print $3}')
+                SYNC=$(echo "$STATUS" | grep -Eo "Sync Status:\s+\S+" | awk '{print $3}')
+                LAST_SYNC=$(echo "$STATUS" | grep -E "Last Synced" || true)
+
+                if [[ "$HEALTH" == "Healthy" && "$SYNC" == "Synced" && -n "$LAST_SYNC" ]]; then
+                  echo "✅ ArgoCD app '$APP_NAME' is Synced and Healthy!"
+                  break
+                else
+                  echo "⏳ Waiting... Health=$HEALTH, Sync=$SYNC, LastSyncDetected=$([[ -n "$LAST_SYNC" ]] && echo yes || echo no)"
+                fi
+
+                # Timeout check
+                CURRENT_TIME=$(date +%s)
+                ELAPSED=$((CURRENT_TIME - START_TIME))
+                if [[ $ELAPSED -ge $TIMEOUT ]]; then
+                  echo "❌ Timeout waiting for '$APP_NAME' to reach Synced + Healthy."
+                  exit 1
+                fi
+
+                sleep $INTERVAL
               done
 
 
