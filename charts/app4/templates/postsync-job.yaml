@@ -1,4 +1,4 @@
-{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") (eq .Values.env "prod") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -7,7 +7,9 @@ metadata:
     app.kubernetes.io/name: {{ .Chart.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
 spec:
+  ttlSecondsAfterFinished: 300
   backoffLimit: 1
   template:
     spec:
