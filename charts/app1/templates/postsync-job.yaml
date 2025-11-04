@@ -28,7 +28,7 @@ spec:
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
             
-              echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
+              
               echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
 
               case "{{ .Values.env }}" in
@@ -70,23 +70,25 @@ spec:
                   ;;
               esac
 
-              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                        | grep -q 'Health Status: *Healthy'; do
-                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                    sleep 10
-                done 
-
-              echo "Next environment is: ${NEXT_ENV}"
-              NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
-              echo "🔹 Preparing promotion PR for ${NEXT_APP}"
-
-              # ✅ Step 1: Login first
+               # ✅ Step 1: Login first
               ARGOCD_ADMIN_PWD="xETEiQf5PXpQiv8F"   # <-- Hardcoded for testing
               argocd login argocd-server.argocd.svc.cluster.local:443 \
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
                 # Wait for this app to reach Healthy+Synced
+
+              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
+                        | grep -q 'Health Status: *Healthy'; do
+                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
+                    sleep 10
+                done 
+              echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
+              echo "Next environment is: ${NEXT_ENV}"
+              NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
+              echo "🔹 Preparing promotion PR for ${NEXT_APP}"
+
+             
 
                
 
