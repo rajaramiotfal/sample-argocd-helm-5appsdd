@@ -77,7 +77,7 @@ spec:
               cp envs/{{ .Values.env }}/app-values.yaml envs/${NEXT_ENV}/app-values.yaml
 
               # Detect and reuse existing PR branch
-              BRANCH_NAME="promote-${APP_NAME}-${CURRENT_ENV}-app to-${APP_NAME}-${NEXT_ENV}"
+              BRANCH_NAME="promote-${APP_NAME}-${CURRENT_ENV}-to-${APP_NAME}-${NEXT_ENV}"
 
               if git ls-remote --heads origin ${BRANCH_NAME} | grep -q ${BRANCH_NAME}; then
                 echo "⚠️ Branch ${BRANCH_NAME} already exists, skipping PR creation."
