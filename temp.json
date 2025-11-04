@@ -1,0 +1,18 @@
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "creationTimestamp": "2025-11-03T16:50:00Z",
+        "labels": {
+            "kubernetes.io/metadata.name": "dev-ns"
+        },
+        "name": "dev-ns",
+        "resourceVersion": "379544",
+        "uid": "fb68bfaf-bfca-46d6-9de2-8e6c1fa70bca"
+    },
+    "spec": {
+    },
+    "status": {
+        "phase": "Active"
+    }
+}
