@@ -1,4 +1,4 @@
-env: dev
+env: prod
 app1:
   image:
     repository: docker.io/rajarammurali513/app1
