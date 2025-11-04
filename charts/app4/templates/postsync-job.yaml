@@ -41,7 +41,7 @@ spec:
                 prod)
                   echo "🟢 Current environment is prod — updating prod image tags locally"
                   apk add --no-cache yq >/dev/null 2>&1
-                  apk add --no-cache git github-cli bash curl
+               
 
                   git config --global user.email "bot@argocd.local"
                   git config --global user.name "ArgoCD Bot"
@@ -50,13 +50,13 @@ spec:
                   git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
                   cd repo
 
-                  for app in app1 app2 app3 app4 app5; do
-                    CUR_TAG=$(yq e ".${app}.image.tag" envs/prod/app-values.yaml)
-                    if [ "$CUR_TAG" != "null" ]; then
-                      echo "  ➤ Ensuring ${app} tag = ${CUR_TAG}"
-                      yq e -i ".${app}.image.tag = \"$CUR_TAG\"" envs/prod/app-values.yaml
-                    fi
-                  done
+                  CUR_TAG=$(yq e ".${APP_NAME}.image.tag" envs/prod/app-values.yaml)
+                  if [ "$CUR_TAG" != "null" ]; then
+                    echo "  ➤ Ensuring ${APP_NAME} tag = ${CUR_TAG}"
+                    yq e -i ".${APP_NAME}.image.tag = \"$CUR_TAG\"" envs/prod/app-values.yaml
+                  else
+                    echo "⚠️ No tag found for ${APP_NAME} in prod file."
+                  fi
 
                   git add envs/prod/app-values.yaml
                   git commit -m "Sync prod image tags with latest releases"
@@ -78,21 +78,14 @@ spec:
                 --grpc-web --insecure
                 # Wait for this app to reach Healthy+Synced
 
-              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                        | grep -q 'Health Status: *Healthy'; do
-                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                    sleep 10
-                done 
+              
               echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
               echo "Next environment is: ${NEXT_ENV}"
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
               echo "🔹 Preparing promotion PR for ${NEXT_APP}"
 
-             
-
-               
-
-              apk add --no-cache git github-cli bash curl
+                          
+          
 
               git config --global user.email "bot@argocd.local"
               git config --global user.name "ArgoCD Bot"
@@ -101,14 +94,18 @@ spec:
               git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
               cd repo
 
-               echo "🔍 Updating image tags in envs/${NEXT_ENV}/app-values.yaml..."
-              for app in app1 app2 app3 app4 app5; do
-                CUR_TAG=$(yq e ".${app}.image.tag" envs/${CURRENT_ENV}/app-values.yaml)
-                if [ "$CUR_TAG" != "null" ]; then
-                  echo "  ➤ $app → tag=$CUR_TAG"
-                  yq e -i ".${app}.image.tag = \"$CUR_TAG\"" envs/${NEXT_ENV}/app-values.yaml
-                fi
-              done
+              echo "🔍 Updating image tag for ${APP_NAME} in envs/${NEXT_ENV}/app-values.yaml..."
+
+              # Get current app tag from current environment values file
+              CUR_TAG=$(yq e ".${APP_NAME}.image.tag" envs/${CURRENT_ENV}/app-values.yaml)
+
+              if [ "$CUR_TAG" != "null" ]; then
+                echo "  ➤ Updating ${APP_NAME} tag to ${CUR_TAG}"
+                yq e -i ".${APP_NAME}.image.tag = \"$CUR_TAG\"" envs/${NEXT_ENV}/app-values.yaml
+              else
+                echo "⚠️ No tag found for ${APP_NAME} in envs/${CURRENT_ENV}/app-values.yaml"
+              fi
+
 
               # Detect and reuse existing PR branch
               BRANCH_NAME="promote-${APP_NAME}-${CURRENT_ENV}-to-${APP_NAME}-${NEXT_ENV}"
