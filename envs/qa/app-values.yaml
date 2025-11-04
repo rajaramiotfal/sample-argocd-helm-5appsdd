@@ -1,4 +1,4 @@
-env: qa
+env: dev
 app1:
   image:
     repository: docker.io/rajarammurali513/app1
