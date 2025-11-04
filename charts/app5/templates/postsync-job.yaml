@@ -28,7 +28,11 @@ spec:
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
             
-              
+              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
+                        | grep -q 'Health Status: *Healthy'; do
+                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
+                    sleep 10
+                done 
 
               echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
               echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
@@ -39,6 +43,32 @@ spec:
                   ;;
                 qa)
                   NEXT_ENV="prod"
+                  ;;
+                prod)
+                  echo "🟢 Current environment is prod — updating prod image tags locally"
+                  apk add --no-cache yq >/dev/null 2>&1
+                  apk add --no-cache git github-cli bash curl
+
+                  git config --global user.email "bot@argocd.local"
+                  git config --global user.name "ArgoCD Bot"
+
+                  echo "🔹 Cloning repository..."
+                  git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
+                  cd repo
+
+                  for app in app1 app2 app3 app4 app5; do
+                    CUR_TAG=$(yq e ".${app}.image.tag" envs/prod/app-values.yaml)
+                    if [ "$CUR_TAG" != "null" ]; then
+                      echo "  ➤ Ensuring ${app} tag = ${CUR_TAG}"
+                      yq e -i ".${app}.image.tag = \"$CUR_TAG\"" envs/prod/app-values.yaml
+                    fi
+                  done
+
+                  git add envs/prod/app-values.yaml
+                  git commit -m "Sync prod image tags with latest releases"
+                  git push origin main
+                  echo "✅ Prod image tags refreshed. No further promotion required."
+                  exit 0
                   ;;
                 *)
                   echo "No promotion required for {{ .Values.env }}"
@@ -58,11 +88,7 @@ spec:
                 --grpc-web --insecure
                 # Wait for this app to reach Healthy+Synced
 
-              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                        | grep -q 'Health Status: *Healthy'; do
-                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                    sleep 10
-                done  
+               
 
               apk add --no-cache git github-cli bash curl
 
