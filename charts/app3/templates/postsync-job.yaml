@@ -28,12 +28,6 @@ spec:
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
               chmod +x /usr/local/bin/argocd
             
-              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
-                        | grep -q 'Health Status: *Healthy'; do
-                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
-                    sleep 10
-                done 
-
               echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
               echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
 
@@ -75,6 +69,12 @@ spec:
                   exit 0
                   ;;
               esac
+
+              until argocd app get {{ .Chart.Name }}-{{ .Values.env }} --grpc-web --insecure \
+                        | grep -q 'Health Status: *Healthy'; do
+                    echo "⏳ Still waiting for {{ .Chart.Name }}..."
+                    sleep 10
+                done 
 
               echo "Next environment is: ${NEXT_ENV}"
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
