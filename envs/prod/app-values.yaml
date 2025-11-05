@@ -1,21 +1,21 @@
 env: prod
-app1:
+app6:
   image:
-    repository: docker.io/rajarammurali513/app1
-    tag: "1.11.0"
-app2:
+    repository: docker.io/rajarammurali513/app6
+    tag: "1.0.0"
+app7:
   image:
-    repository: docker.io/rajarammurali513/app2
-    tag: "1.9.0"
-app3:
+    repository: docker.io/rajarammurali513/app7
+    tag: "1.0.0"
+app8:
   image:
-    repository: docker.io/rajarammurali513/app3
-    tag: "1.8.0"
-app4:
+    repository: docker.io/rajarammurali513/app8
+    tag: "1.0.0"
+app9:
   image:
-    repository: docker.io/rajarammurali513/app4
-    tag: "1.8.0"
-app5:
+    repository: docker.io/rajarammurali513/app9
+    tag: "1.0.0"
+app10:
   image:
-    repository: docker.io/rajarammurali513/app5
-    tag: "1.8.0"
+    repository: docker.io/rajarammurali513/app10
+    tag: "1.0.0"

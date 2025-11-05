@@ -7,25 +7,25 @@ spec:
   generators:
     - list:
         elements:
-          - name: app1
-            chartPath: charts/app1
-            image: docker.io/rajarammurali513/app1
+          - name: app6
+            chartPath: charts/app6
+            image: docker.io/rajarammurali513/app6
             semver: ~1
-          - name: app2
-            chartPath: charts/app2
-            image: docker.io/rajarammurali513/app2
+          - name: app7
+            chartPath: charts/app7
+            image: docker.io/rajarammurali513/app7
             semver: ~1
-          - name: app3
-            chartPath: charts/app3
-            image: docker.io/rajarammurali513/app3
+          - name: app8
+            chartPath: charts/app8
+            image: docker.io/rajarammurali513/app8
             semver: ~1
-          - name: app4
-            chartPath: charts/app4
-            image: docker.io/rajarammurali513/app4
+          - name: app9
+            chartPath: charts/app9
+            image: docker.io/rajarammurali513/app9
             semver: ~1
-          - name: app5
-            chartPath: charts/app5
-            image: docker.io/rajarammurali513/app5
+          - name: app10
+            chartPath: charts/app10
+            image: docker.io/rajarammurali513/app10
             semver: ~1
 
   template:
