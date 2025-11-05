@@ -1,4 +1,4 @@
-{{- if or (eq .Values.env "dev") (eq .Values.env "qa") (eq .Values.env "prod") }}
+{{- if or (eq .Values.env "dev") (eq .Values.env "qa") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -26,10 +26,7 @@ spec:
               apk add --no-cache bash curl jq git yq github-cli
               echo "🔹 Installing ArgoCD CLI..."
               curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.14.19/argocd-linux-amd64
-              chmod +x /usr/local/bin/argocd
-            
-              
-              echo "🔹 Promotion hook triggered for {{ .Chart.Name }} ({{ .Values.env }})"
+              chmod +x /usr/local/bin/argocd            
 
               case "{{ .Values.env }}" in
                 dev)
@@ -37,33 +34,7 @@ spec:
                   ;;
                 qa)
                   NEXT_ENV="prod"
-                  ;;
-                prod)
-                  echo "🟢 Current environment is prod — updating prod image tags locally"
-                  apk add --no-cache yq >/dev/null 2>&1
-               
-
-                  git config --global user.email "bot@argocd.local"
-                  git config --global user.name "ArgoCD Bot"
-
-                  echo "🔹 Cloning repository..."
-                  git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
-                  cd repo
-
-                  CUR_TAG=$(yq e ".${APP_NAME}.image.tag" envs/prod/app-values.yaml)
-                  if [ "$CUR_TAG" != "null" ]; then
-                    echo "  ➤ Ensuring ${APP_NAME} tag = ${CUR_TAG}"
-                    yq e -i ".${APP_NAME}.image.tag = \"$CUR_TAG\"" envs/prod/app-values.yaml
-                  else
-                    echo "⚠️ No tag found for ${APP_NAME} in prod file."
-                  fi
-
-                  git add envs/prod/app-values.yaml
-                  git commit -m "Sync prod image tags with latest releases"
-                  git push origin main
-                  echo "✅ Prod image tags refreshed. No further promotion required."
-                  exit 0
-                  ;;
+                   ;;
                 *)
                   echo "No promotion required for {{ .Values.env }}"
                   exit 0
@@ -76,20 +47,12 @@ spec:
                 --username admin \
                 --password "${ARGOCD_ADMIN_PWD}" \
                 --grpc-web --insecure
-                # Wait for this app to reach Healthy+Synced
-
-              
-              echo "✅ {{ .Chart.Name }} is healthy. Moving to next sync wave..."
+                # Wait for this app to reach Healthy+Synced              
+             
               echo "Next environment is: ${NEXT_ENV}"
               NEXT_APP="{{ .Chart.Name }}-${NEXT_ENV}"
               echo "🔹 Preparing promotion PR for ${NEXT_APP}"
-
-                          
-          
-
-              git config --global user.email "bot@argocd.local"
-              git config --global user.name "ArgoCD Bot"
-
+              
               echo "🔹 Cloning repository..."
               git clone https://${GITHUB_USER}:${GITHUB_PAT}@github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git repo
               cd repo
@@ -106,9 +69,8 @@ spec:
                 echo "⚠️ No tag found for ${APP_NAME} in envs/${CURRENT_ENV}/app-values.yaml"
               fi
 
-
               # Detect and reuse existing PR branch
-              BRANCH_NAME="promote-${APP_NAME}-${CURRENT_ENV}-to-${APP_NAME}-${NEXT_ENV}"
+              BRANCH_NAME="promote-${APP_NAME}-${CURRENT_ENV}-to-${APP_NAME}-${NEXT_ENV}-$(date +%s)"
 
               if git ls-remote --heads origin ${BRANCH_NAME} | grep -q ${BRANCH_NAME}; then
                 echo "⚠️ Branch ${BRANCH_NAME} already exists, skipping PR creation."
