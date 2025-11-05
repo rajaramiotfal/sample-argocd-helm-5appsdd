@@ -14,27 +14,27 @@ spec:
                   writeBack: ${WRITEBACK_METHOD}
           - list:
               elements:
-                - name: charts/app6
+                - name: app6
                   chartPath: charts/app6
                   image: docker.io/rajarammurali513/app6
                   semver: "~1"
                   syncWave: "1"
-                - name: charts/app7
+                - name: app7
                   chartPath: charts/app7
                   image: docker.io/rajarammurali513/app7
                   semver: "~1"
                   syncWave: "2"
-                - name: charts/app8
+                - name: app8
                   chartPath: charts/app8
                   image: docker.io/rajarammurali513/app8
                   semver: "~1"
                   syncWave: "3"
-                - name: charts/app9
+                - name: app9
                   chartPath: charts/app9
                   image: docker.io/rajarammurali513/app9
                   semver: "~1"
                   syncWave: "4"
-                - name: charts/app10
+                - name: app10
                   chartPath: charts/app10
                   image: docker.io/rajarammurali513/app10
                   semver: "~1"
