@@ -1,0 +1,48 @@
+kubectl -n argocd delete applicationsets --all
+
+kubectl -n argocd delete applications.argoproj.io --all
+
+$env:GITHUB_PAT = "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"
+argocd repo add https://github.com/rajaramiotfal/sample-argocd-helm-5appsdd.git --username rajaramiotfal --password $env:GITHUB_PAT --upsert
+
+
+kubectl -n argocd create secret docker-registry regcred --docker-server=docker.io --docker-username=rajarammurali513 --docker-password=Padgal@123
+
+
+docker build -t docker.io/rajarammurali513/app2:1.6.0 .
+docker push docker.io/rajarammurali513/app2:1.6.0
+
+
+
+
+kubectl -n argocd delete secret argocd-image-updater-secretd
+
+
+kubectl config get-contexts
+kubectl config use-context docker-desktop
+
+argocd cluster list
+kubectl config get-clusters
+
+
+kubectl apply -f argocd/applicationset.yaml -n argocd
+
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+kubectl rollout restart deployment -n argocd
+kubectl -n argocd logs -f deploy/argocd-image-updater
+
+
+argocd login localhost:8080 --username admin --password xETEiQf5PXpQiv8F --insecure
+
+
+$env:ENV_NAME = "dev"
+$env:NS_NAME = "dev-ns"
+$env:WRITEBACK_METHOD = "git"
+
+(Get-Content argocd\applicationset.yaml) `
+  -replace '\$\{ENV_NAME\}', $env:ENV_NAME `
+  -replace '\$\{NS_NAME\}', $env:NS_NAME `
+  -replace '\$\{WRITEBACK_METHOD\}', $env:WRITEBACK_METHOD | kubectl apply  -f -
+
+
+
